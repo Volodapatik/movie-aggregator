@@ -1,0 +1,52 @@
+body {
+  margin: 0;
+  padding: 10px;
+  font-family: sans-serif;
+  background: #111;
+  color: #fff;
+}
+
+h1 {
+  text-align: center;
+}
+
+.search {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.movie {
+  border-bottom: 1px solid #333;
+  padding: 10px 0;
+}
+
+.movie img {
+  width: 120px;
+  border-radius: 6px;
+}
+
+.movie h3 {
+  margin: 5px 0;
+}
+
+.movie p {
+  font-size: 14px;
+  color: #ccc;
+}
+
+a {
+  color: #4da6ff;
+  text-decoration: none;
+}
