@@ -11,38 +11,73 @@ btn.onclick = async () => {
 
   results.innerHTML = "Завантаження...";
 
-  const url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=uk-UA`;
+  const searchUrl =
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=uk-UA`;
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
+  const res = await fetch(searchUrl);
+  const data = await res.json();
 
-    results.innerHTML = "";
+  results.innerHTML = "";
 
-    if (!data.results.length) {
-      results.innerHTML = "Нічого не знайдено 😢";
-      return;
-    }
+  if (!data.results.length) {
+    results.innerHTML = "Нічого не знайдено 😢";
+    return;
+  }
 
-    data.results.forEach(movie => {
-      const poster = movie.poster_path
-        ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-        : "";
+  for (const movie of data.results) {
+    const providers = await getFreeProviders(movie.id);
 
-      results.innerHTML += `
-        <div class="movie">
-          ${poster ? `<img src="${poster}">` : ""}
-          <h3>${movie.title}</h3>
-          <p>${movie.overview || "Опис відсутній"}</p>
-          <a target="_blank"
-             href="https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + " трейлер")}">
-             ▶️ Дивитися трейлер
-          </a>
-        </div>
-      `;
-    });
+    // ❗ якщо немає безкоштовних — НЕ показуємо фільм
+    if (!providers) continue;
 
-  } catch (e) {
-    results.innerHTML = "Помилка з'єднання";
+    const poster = movie.poster_path
+      ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+      : "";
+
+    results.innerHTML += `
+      <div class="movie">
+        ${poster ? `<img src="${poster}">` : ""}
+        <h3>${movie.title}</h3>
+        <p>${movie.overview || "Опис відсутній"}</p>
+        ${renderProviders(providers)}
+      </div>
+    `;
+  }
+
+  if (!results.innerHTML) {
+    results.innerHTML = "Безкоштовно недоступно 😢";
   }
 };
+
+// 🔎 шукаємо ТІЛЬКИ безкоштовні сервіси
+async function getFreeProviders(movieId) {
+  const url =
+    `https://api.themoviedb.org/3/movie/${movieId}/watch/providers?api_key=${TMDB_API_KEY}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const country = data.results?.UA || data.results?.US;
+  if (!country || !country.flatrate) return null;
+
+  return {
+    link: country.link,
+    providers: country.flatrate
+  };
+}
+
+// 🎬 кнопки перегляду
+function renderProviders(data) {
+  let html = `<div class="providers"><strong>Дивитися безкоштовно:</strong><br>`;
+
+  data.providers.forEach(p => {
+    html += `
+      <a target="_blank" href="${data.link}">
+        ▶️ ${p.provider_name}
+      </a><br>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
+}
